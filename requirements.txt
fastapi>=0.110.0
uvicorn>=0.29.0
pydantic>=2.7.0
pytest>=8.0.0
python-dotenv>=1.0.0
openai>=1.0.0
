@@ -1,0 +1,91 @@
+# Crazy AI & Robotics System
+
+This repository is the starting point for a hybrid AI + robotics system that combines:
+
+- a language model for command understanding and task planning
+- sensor and perception modules for environment awareness
+- safety logic for real-time validation
+- robot control orchestration for execution
+- a simulation layer for safe planning before deployment
+
+The system architecture is intentionally layered so it can evolve from a simple prototype into an autonomous robot platform.
+
+## System overview
+
+1. User input and command parsing
+2. LLM-driven intent extraction and planning
+3. Perception and environment analysis
+4. Safety validation and emergency checks
+5. Robot action execution
+6. Simulation and policy verification
+7. Learning and memory for future improvement
+
+## Repository structure
+
+```text
+crazy-ai-robotics-llm/
+├── app/
+│   └── main.py
+├── docs/
+│   └── architecture.md
+├── src/
+│   └── ai_robotics/
+│       ├── __init__.py
+│       ├── agent.py
+│       ├── cli.py
+│       ├── config.py
+│       ├── llm.py
+│       ├── action_engine.py
+│       ├── perception.py
+│       ├── robot.py
+│       ├── safety.py
+│       └── simulator.py
+├── tests/
+│   ├── conftest.py
+│   └── test_system.py
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── setup.py
+└── run_demo.py
+```
+
+## Current project phases
+
+### Phase 2: LLM integration
+
+The system now includes a planner abstraction that can use a rule-based fallback or a real LLM backend when configured.
+
+### Phase 3: robot control layer
+
+Action execution is modeled as standardized robot operations such as `move`, `scan`, `inspect`, `stop`, and `charge`.
+
+### Phase 4: simulation layer
+
+A simulator can execute the planned sequence against a mock environment before sending commands to a real robot.
+
+## Quick start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m ai_robotics.cli "move to the charging dock"
+```
+
+## Demo API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Then call:
+
+- `GET /`
+- `POST /command`
+- `POST /plan`
+- `POST /simulate`
+
+## Architecture notes
+
+This repository begins with a safe, modular design so it can scale into a ROS-based or cloud-connected autonomous robotics platform.
