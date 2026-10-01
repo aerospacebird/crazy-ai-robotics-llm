@@ -1,0 +1,48 @@
+from dataclasses import dataclass
+from typing import List, Optional
+
+
+@dataclass
+class ActionCommand:
+    action: str
+    target: Optional[str] = None
+    speed: float = 0.0
+    safe: bool = True
+
+
+class SafetyValidator:
+    """Ensures proposed robot actions satisfy basic safety constraints."""
+
+    def __init__(self, emergency_stop_distance: float = 1.5, safe_speed_limit: float = 0.8):
+        self.emergency_stop_distance = emergency_stop_distance
+        self.safe_speed_limit = safe_speed_limit
+
+    def validate(self, action: ActionCommand, obstacle_distance: float) -> bool:
+        if action.action == "stop":
+            return True
+
+        if obstacle_distance <= self.emergency_stop_distance:
+            return False
+
+        if action.speed > self.safe_speed_limit:
+            return False
+
+        return True
+
+    def explain(self, action: ActionCommand, obstacle_distance: float) -> str:
+        if obstacle_distance <= self.emergency_stop_distance:
+            return "Stop: obstacle is within emergency range."
+        if action.speed > self.safe_speed_limit:
+            return "Stop: planned speed exceeds safe limit."
+        return "Action is within safe operating constraints."
+
+
+class SafetyController:
+    """Simple wrapper that resolves whether to proceed or stop."""
+
+    def __init__(self, validator: SafetyValidator):
+        self.validator = validator
+
+    def decide(self, action: ActionCommand, obstacle_distance: float) -> str:
+        allowed = self.validator.validate(action, obstacle_distance)
+        return "execute" if allowed else "stop"

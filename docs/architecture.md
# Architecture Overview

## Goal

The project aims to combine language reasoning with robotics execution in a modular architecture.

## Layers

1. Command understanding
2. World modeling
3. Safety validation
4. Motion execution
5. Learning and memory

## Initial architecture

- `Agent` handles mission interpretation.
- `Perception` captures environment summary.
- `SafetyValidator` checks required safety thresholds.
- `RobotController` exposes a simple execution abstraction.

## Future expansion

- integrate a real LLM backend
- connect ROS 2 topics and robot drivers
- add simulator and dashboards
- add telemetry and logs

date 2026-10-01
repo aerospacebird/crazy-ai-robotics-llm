@@ -1,0 +1,40 @@
+from ai_robotics.agent import RobotAgent
+from ai_robotics.perception import RobotPerception
+from ai_robotics.safety import ActionCommand, SafetyValidator
+
+
+def test_parse_intent_for_navigation():
+    agent = RobotAgent(settings={"supported_commands": ["move", "navigate", "scan", "stop"]})
+    intent = agent.parse_intent("move to the dock")
+
+    assert intent.action == "move"
+    assert "dock" in intent.target
+    assert intent.confidence > 0
+
+
+def test_plan_generation_for_command():
+    agent = RobotAgent(settings={"supported_commands": ["move", "navigate", "scan", "stop"]})
+    result = agent.execute("scan the room")
+
+    assert result["status"] == "ready_for_execution"
+    assert "scan_area" in result["plan"]
+
+
+def test_perception_snapshot():
+    perception = RobotPerception()
+    snapshot = perception.sense(obstacle_distance=2.5, object_count=3, scene_tags=["desk", "chair"])
+
+    assert snapshot.obstacle_distance == 2.5
+    assert snapshot.object_count == 3
+    assert "desk" in snapshot.scene_tags
+
+
+def test_safety_validation_blocks_near_obstacles():
+    validator = SafetyValidator(emergency_stop_distance=1.5, safe_speed_limit=0.8)
+    action = ActionCommand(action="move", target="dock", speed=0.9, safe=True)
+
+    safe = validator.validate(action, obstacle_distance=1.0)
+    assert safe is False
+
+    message = validator.explain(action, obstacle_distance=1.0)
+    assert "Stop" in message

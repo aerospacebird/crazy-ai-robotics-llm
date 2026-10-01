@@ -1,0 +1,13 @@
+from ai_robotics.agent import RobotAgent
+from ai_robotics.config import DEFAULT_SETTINGS
+
+
+def main():
+    agent = RobotAgent(settings={"supported_commands": DEFAULT_SETTINGS.supported_commands})
+    command = input("Enter a robot command: ")
+    result = agent.execute(command)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

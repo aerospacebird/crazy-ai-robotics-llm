@@ -1,0 +1,81 @@
+# Crazy AI & Robotics System
+
+This repository is the starting point for a hybrid AI + robotics system that combines:
+
+- a language model for command understanding and task planning
+- sensor and perception modules for environment awareness
+- safety logic for real-time validation
+- robot control orchestration for execution
+
+The goal is to build a scalable architecture for autonomous robotic agents that can interpret human instructions, reason about their environment, and execute safe actions.
+
+## System overview
+
+The system is structured around a layered architecture:
+
+1. User Interface
+   - text, speech, or operator commands
+2. Agent Layer
+   - command parsing
+   - task decomposition
+   - decision policy
+3. Perception Layer
+   - object detection
+   - environmental state estimation
+   - sensor fusion
+4. Safety Layer
+   - collision avoidance
+   - emergency stop checks
+   - action validation
+5. Execution Layer
+   - robot movement and manipulation commands
+6. Memory and Learning
+   - task history
+   - environment memory
+   - future optimization
+
+## Repository structure
+
+```text
+crazy-ai-robotics-llm/
+├── app/
+│   └── main.py
+├── docs/
+│   └── architecture.md
+├── src/
+│   └── ai_robotics/
+│       ├── __init__.py
+│       ├── agent.py
+│       ├── cli.py
+│       ├── config.py
+│       ├── perception.py
+│       ├── robot.py
+│       └── safety.py
+├── tests/
+│   └── test_system.py
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── setup.py
+```
+
+## Quick start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m ai_robotics.cli "move to the charging dock"
+```
+
+## Next milestones
+
+- integrate a real LLM such as OpenAI, Ollama, or local transformers
+- connect a perception stack using OpenCV or ROS 2 topics
+- add simulator integration such as Gazebo or Isaac Sim
+- add actuation and control commands for a real robot platform
+- build a dashboard for robot state and mission monitoring
+
+## Architecture notes
+
+This repository intentionally starts with a clear, modular structure so it can evolve into a serious robotics intelligence stack without locking the project into one narrow implementation.

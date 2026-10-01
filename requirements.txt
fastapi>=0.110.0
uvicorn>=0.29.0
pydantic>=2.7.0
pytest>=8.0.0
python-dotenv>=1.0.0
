@@ -1,0 +1,18 @@
+# Crazy AI & Robotics System
+
+This project provides a lightweight foundation for building an autonomous AI robotics system.
+It combines mission planning, sensor understanding, safety validation, and robot execution.
+
+## Core modules
+
+- `ai_robotics.agent`: command parsing and planning logic
+- `ai_robotics.perception`: sensor snapshot creation and environment analysis
+- `ai_robotics.safety`: collision and safety validation
+- `ai_robotics.robot`: low-level robot control abstraction
+- `ai_robotics.cli`: command-line interface for experimentation
+
+## Basic usage
+
+```bash
+python -m ai_robotics.cli "navigate to the charging station"
+```

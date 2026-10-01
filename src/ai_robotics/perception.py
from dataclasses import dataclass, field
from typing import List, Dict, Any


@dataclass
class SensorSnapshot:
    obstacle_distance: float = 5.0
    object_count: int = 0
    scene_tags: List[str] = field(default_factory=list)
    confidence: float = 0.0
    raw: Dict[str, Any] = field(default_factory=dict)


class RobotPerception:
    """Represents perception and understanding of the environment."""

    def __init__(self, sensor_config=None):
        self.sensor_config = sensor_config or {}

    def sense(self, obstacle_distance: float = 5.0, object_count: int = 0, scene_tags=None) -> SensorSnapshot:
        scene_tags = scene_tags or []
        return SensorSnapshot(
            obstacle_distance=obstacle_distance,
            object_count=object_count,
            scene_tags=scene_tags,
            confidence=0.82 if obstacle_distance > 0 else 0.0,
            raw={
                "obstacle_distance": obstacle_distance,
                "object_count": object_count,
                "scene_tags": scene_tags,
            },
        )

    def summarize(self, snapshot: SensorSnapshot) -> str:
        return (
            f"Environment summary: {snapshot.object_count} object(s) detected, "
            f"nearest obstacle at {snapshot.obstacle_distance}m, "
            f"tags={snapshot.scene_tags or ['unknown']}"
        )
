@@ -1,0 +1,67 @@
+from dataclasses import dataclass, field
+from typing import List, Dict, Any
+
+
+@dataclass
+class Intent:
+    action: str
+    target: str
+    confidence: float
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+
+class RobotAgent:
+    """High-level decision and planning agent."""
+
+    def __init__(self, settings=None):
+        self.settings = settings or {}
+
+    def parse_intent(self, command: str) -> Intent:
+        normalized = command.strip().lower()
+        if not normalized:
+            raise ValueError("Command cannot be empty.")
+
+        tokens = normalized.split()
+        action = tokens[0]
+        target = " ".join(tokens[1:]) if len(tokens) > 1 else "current area"
+
+        if action not in self.settings.get("supported_commands", []) and action not in {
+            "move",
+            "navigate",
+            "inspect",
+            "pick",
+            "place",
+            "stop",
+            "charge",
+            "scan",
+        }:
+            action = "inspect"
+
+        return Intent(
+            action=action,
+            target=target,
+            confidence=0.85,
+            parameters={"raw_command": command},
+        )
+
+    def make_plan(self, intent: Intent) -> List[str]:
+        action_map = {
+            "move": ["sense_environment", "plan_route", "execute_motion"],
+            "navigate": ["sense_environment", "plan_route", "execute_motion"],
+            "inspect": ["scan_area", "identify_objects", "report_findings"],
+            "pick": ["detect_target", "approach_target", "grasp_object"],
+            "place": ["locate_drop_zone", "move_to_zone", "release_object"],
+            "charge": ["locate_charger", "move_to_charger", "begin_charging"],
+            "scan": ["scan_area", "analyze_scene", "report_findings"],
+            "stop": ["emergency_stop", "stabilize", "report_status"],
+        }
+        return action_map.get(intent.action, ["analyze_context", "execute_safe_action"])
+
+    def execute(self, command: str) -> Dict[str, Any]:
+        intent = self.parse_intent(command)
+        plan = self.make_plan(intent)
+        return {
+            "intent": intent,
+            "plan": plan,
+            "status": "ready_for_execution",
+        }
