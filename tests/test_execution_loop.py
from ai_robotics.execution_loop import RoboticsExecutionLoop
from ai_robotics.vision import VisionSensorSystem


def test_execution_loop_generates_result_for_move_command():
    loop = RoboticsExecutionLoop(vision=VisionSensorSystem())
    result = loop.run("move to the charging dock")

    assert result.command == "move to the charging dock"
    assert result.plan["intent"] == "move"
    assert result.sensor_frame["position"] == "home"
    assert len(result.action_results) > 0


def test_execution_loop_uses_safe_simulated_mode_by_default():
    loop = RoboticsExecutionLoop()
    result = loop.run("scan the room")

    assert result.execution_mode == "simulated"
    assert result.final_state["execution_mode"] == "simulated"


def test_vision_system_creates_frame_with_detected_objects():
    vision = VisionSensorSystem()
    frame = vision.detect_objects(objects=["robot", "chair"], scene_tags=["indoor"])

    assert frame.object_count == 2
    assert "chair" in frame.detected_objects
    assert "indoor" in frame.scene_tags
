@@ -1,0 +1,12 @@
+from ai_robotics.execution_loop import RoboticsExecutionLoop
+
+
+def main():
+    loop = RoboticsExecutionLoop()
+    command = input("Enter a robot command: ")
+    result = loop.run(command)
+    print(result)
+
+
+if __name__ == "__main__":
+    main()
