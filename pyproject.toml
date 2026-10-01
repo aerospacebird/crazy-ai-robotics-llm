@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-robotics"
+version = "0.1.0"
+description = "AI robotics framework with LLM planning, sensor perception, safety validation, ROS 2 integration, and monitoring"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi>=0.110.0",
+  "uvicorn>=0.29.0",
+  "pydantic>=2.7.0",
+  "pytest>=8.0.0",
+  "python-dotenv>=1.0.0",
+  "openai>=1.0.0",
+  "streamlit>=1.32.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

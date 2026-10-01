@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+from ai_robotics.safety import ActionCommand, SafetyValidator
+
+
+@dataclass
+class RobotAction:
+    name: str
+    target: Optional[str] = None
+    params: Dict[str, Any] = field(default_factory=dict)
+    priority: int = 0
+
+
+class ActionExecutionEngine:
+    """Maps high-level plans into concrete robot commands."""
+
+    def __init__(self, safety_validator: Optional[SafetyValidator] = None):
+        self.safety_validator = safety_validator or SafetyValidator()
+
+    def build_action(self, action_name: str, target: Optional[str] = None, speed: float = 0.5, **kwargs) -> RobotAction:
+        return RobotAction(
+            name=action_name,
+            target=target,
+            params={"speed": speed, **kwargs},
+            priority={
+                "stop": 100,
+                "move": 80,
+                "navigate": 80,
+                "scan": 60,
+                "inspect": 60,
+                "charge": 70,
+                "pick": 75,
+                "place": 75,
+            }.get(action_name, 50),
+        )
+
+    def execute(self, action_name: str, target: Optional[str] = None, obstacle_distance: float = 5.0, speed: float = 0.5, **kwargs) -> Dict[str, Any]:
+        action = self.build_action(action_name, target=target, speed=speed, **kwargs)
+        command = ActionCommand(action=action.name, target=action.target, speed=action.params.get("speed", speed), safe=True)
+        allowed = self.safety_validator.validate(command, obstacle_distance)
+
+        result = {
+            "action": action.name,
+            "target": action.target,
+            "allowed": allowed,
+            "obstacle_distance": obstacle_distance,
+            "speed": action.params.get("speed", speed),
+        }
+
+        if not allowed:
+            result["status"] = "blocked_by_safety"
+            result["reason"] = self.safety_validator.explain(command, obstacle_distance)
+        else:
+            result["status"] = "executed"
+        return result
+
+    def execute_plan(self, actions: List[str], target: Optional[str] = None, obstacle_distance: float = 5.0) -> List[Dict[str, Any]]:
+        results: List[Dict[str, Any]] = []
+        for action_name in actions:
+            result = self.execute(action_name, target=target, obstacle_distance=obstacle_distance)
+            results.append(result)
+            if not result["allowed"]:
+                break
+        return results
+
+
+DEFAULT_ACTION_ENGINE = ActionExecutionEngine()
+
+
+__all__ = ["RobotAction", "ActionExecutionEngine", "DEFAULT_ACTION_ENGINE"]

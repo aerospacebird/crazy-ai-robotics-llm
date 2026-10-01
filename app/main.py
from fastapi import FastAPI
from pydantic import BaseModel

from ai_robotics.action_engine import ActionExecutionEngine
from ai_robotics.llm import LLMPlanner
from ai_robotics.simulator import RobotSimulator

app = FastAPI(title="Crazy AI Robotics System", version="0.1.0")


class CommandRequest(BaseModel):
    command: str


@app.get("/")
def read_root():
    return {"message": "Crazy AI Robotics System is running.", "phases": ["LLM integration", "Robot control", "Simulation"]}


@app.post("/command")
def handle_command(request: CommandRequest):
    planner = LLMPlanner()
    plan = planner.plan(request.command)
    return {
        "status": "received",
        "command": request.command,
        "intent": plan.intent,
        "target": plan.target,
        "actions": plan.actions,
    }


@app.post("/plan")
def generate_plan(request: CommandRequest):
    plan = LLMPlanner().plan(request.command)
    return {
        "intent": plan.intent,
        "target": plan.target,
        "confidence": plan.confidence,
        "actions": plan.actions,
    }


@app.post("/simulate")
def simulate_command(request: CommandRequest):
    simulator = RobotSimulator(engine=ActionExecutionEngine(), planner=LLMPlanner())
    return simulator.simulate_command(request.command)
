@@ -1,0 +1,38 @@
+from ai_robotics.action_engine import ActionExecutionEngine
+from ai_robotics.llm import LLMPlanner
+from ai_robotics.simulator import RobotSimulator
+
+
+def test_llm_planner_generates_move_plan():
+    planner = LLMPlanner()
+    plan = planner.plan("move to the charging dock")
+
+    assert plan.intent == "move"
+    assert "dock" in plan.target.lower()
+    assert len(plan.actions) > 0
+
+
+def test_action_execution_engine_safety_blocks_close_obstacles():
+    engine = ActionExecutionEngine()
+    result = engine.execute("move", target="dock", obstacle_distance=1.0, speed=0.9)
+
+    assert result["allowed"] is False
+    assert result["status"] == "blocked_by_safety"
+
+
+def test_simulator_runs_command_and_returns_result():
+    sim = RobotSimulator()
+    result = sim.simulate_command("scan the room")
+
+    assert result["command"] == "scan the room"
+    assert "plan" in result
+    assert "simulation_results" in result
+    assert isinstance(result["simulation_results"], list)
+
+
+def test_llm_planner_handles_stop_command():
+    planner = LLMPlanner()
+    plan = planner.plan("stop immediately")
+
+    assert plan.intent == "stop"
+    assert "emergency_stop" in plan.actions or "report_status" in plan.actions

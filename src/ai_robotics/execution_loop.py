@@ -1,0 +1,95 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+from ai_robotics.action_engine import ActionExecutionEngine
+from ai_robotics.llm import LLMPlan, LLMPlanner
+from ai_robotics.ros2_bridge import ROS2Bridge
+from ai_robotics.safety import SafetyValidator
+from ai_robotics.simulator import RobotSimulator
+from ai_robotics.vision import VisionSensorSystem
+
+
+@dataclass
+class ExecutionResult:
+    command: str
+    plan: Dict[str, Any]
+    sensor_frame: Dict[str, Any]
+    action_results: List[Dict[str, Any]]
+    safety_status: str
+    execution_mode: str
+    final_state: Dict[str, Any]
+
+
+class RoboticsExecutionLoop:
+    """End-to-end execution loop for AI robotics tasks."""
+
+    def __init__(
+        self,
+        planner: Optional[LLMPlanner] = None,
+        engine: Optional[ActionExecutionEngine] = None,
+        vision: Optional[VisionSensorSystem] = None,
+        safety: Optional[SafetyValidator] = None,
+        simulator: Optional[RobotSimulator] = None,
+        ros_bridge: Optional[ROS2Bridge] = None,
+    ):
+        self.planner = planner or LLMPlanner()
+        self.engine = engine or ActionExecutionEngine(safety_validator=safety or SafetyValidator())
+        self.vision = vision or VisionSensorSystem()
+        self.simulator = simulator or RobotSimulator(engine=self.engine, planner=self.planner)
+        self.ros_bridge = ros_bridge or ROS2Bridge()
+
+    def run(self, command: str, prefer_ros: bool = False) -> ExecutionResult:
+        plan: LLMPlan = self.planner.plan(command)
+        sensor = self.vision.estimate_scene(obstacle_distance=3.2, battery=90.0, position="home")
+        sensor = self.vision.detect_objects(objects=["desk", "charge_station"], scene_tags=["indoor", "navigation"])
+
+        action_results = self.engine.execute_plan(plan.actions, target=plan.target, obstacle_distance=sensor.obstacle_distance)
+        safety_status = "ok" if all(item["allowed"] for item in action_results) else "blocked"
+
+        if prefer_ros and self.ros_bridge._ros_available:
+            execution_mode = "ros2"
+            for action in action_results:
+                if action["allowed"]:
+                    self.ros_bridge.publish_command(action["action"], target=plan.target)
+        else:
+            execution_mode = "simulated"
+            simulation = self.simulator.simulate_command(command)
+            action_results = simulation["simulation_results"]
+            safety_status = "ok" if all(item["status"] == "executed" for item in action_results) else "blocked"
+
+        final_state = {
+            "position": sensor.position,
+            "battery": sensor.battery,
+            "obstacle_distance": sensor.obstacle_distance,
+            "scene_tags": sensor.scene_tags,
+            "execution_mode": execution_mode,
+        }
+
+        return ExecutionResult(
+            command=command,
+            plan={
+                "intent": plan.intent,
+                "target": plan.target,
+                "confidence": plan.confidence,
+                "actions": plan.actions,
+            },
+            sensor_frame={
+                "obstacle_distance": sensor.obstacle_distance,
+                "object_count": sensor.object_count,
+                "scene_tags": sensor.scene_tags,
+                "battery": sensor.battery,
+                "position": sensor.position,
+                "confidence": sensor.confidence,
+            },
+            action_results=action_results,
+            safety_status=safety_status,
+            execution_mode=execution_mode,
+            final_state=final_state,
+        )
+
+
+DEFAULT_EXECUTION_LOOP = RoboticsExecutionLoop()
+
+__all__ = ["ExecutionResult", "RoboticsExecutionLoop", "DEFAULT_EXECUTION_LOOP"]

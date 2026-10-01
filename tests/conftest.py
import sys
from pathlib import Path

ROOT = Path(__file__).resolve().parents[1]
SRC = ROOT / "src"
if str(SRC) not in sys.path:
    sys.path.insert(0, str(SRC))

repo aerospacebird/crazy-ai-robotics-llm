@@ -1,0 +1,22 @@
+from ai_robotics.action_engine import ActionExecutionEngine
+from ai_robotics.llm import LLMPlanner
+from ai_robotics.simulator import RobotSimulator
+
+
+def main():
+    planner = LLMPlanner()
+    command = input("Enter a robot command: ")
+    plan = planner.plan(command)
+    print("LLM Plan:", plan)
+
+    engine = ActionExecutionEngine()
+    actions = engine.execute_plan(plan.actions, target=plan.target, obstacle_distance=3.0)
+    print("Execution results:", actions)
+
+    simulator = RobotSimulator(engine=engine, planner=planner)
+    simulation = simulator.simulate_command(command)
+    print("Simulation:", simulation)
+
+
+if __name__ == "__main__":
+    main()
